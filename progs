@@ -1,0 +1,6 @@
+    mother(X,Y)
+    mother(Y,Z)
+=> grandmother(X,Z)
+
+mother(alice, stella)
+mother(stella, gift)
