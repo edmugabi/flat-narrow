@@ -67,6 +67,9 @@ impl Term {
         }
     }
     
+    pub(super) fn subst_redex(redex: &[Term], sub: &Env) -> Term {
+        unimplemented!()
+    }
 
     pub(super) fn subst(&self, sub: &Env) -> Term {
 

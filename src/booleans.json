@@ -1,0 +1,21 @@
+
+{
+    "clauses": [
+        {
+            "conds": [],
+            "conseqt": "not ( false ) = true"
+        }
+    ],
+    "queries": [
+        {
+            "query": ["true = true"],
+            "strategy": "DFS",
+            "results": [{}]
+        },
+        {
+            "query": ["not ( false ) = true"],
+            "strategy": "DFS",
+            "results": [{}]
+        }
+    ]
+}

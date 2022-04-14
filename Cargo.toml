@@ -7,3 +7,15 @@ edition = "2021"
 
 [dependencies]
 nom = "6.1.2"
+serde_json = "1.0"
+serde = { version = "1", features = ["derive"] }
+log = "0.4.0"
+env_logger = "0.8.4"
+disjoint-sets = "0.4.2"
+
+# cargo run --bin fnarrow
+[[bin]]
+name = "fnarrow"
+test = false
+bench = false
+path = "src/flat_narrow/mod.rs"

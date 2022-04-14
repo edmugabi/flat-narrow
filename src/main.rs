@@ -1,7 +1,13 @@
+#![allow(warnings, unused)]
+extern crate serde;
+extern crate disjoint_sets;
 mod parser;
 mod term;
 mod clause;
 mod sld;
+
+mod flat_narrow;
+mod flat_narrow_experiment; 
 
 mod find_subterm;
 mod narrow;
@@ -10,6 +16,7 @@ mod rewrite;
 mod solve;
 //mod solve_one_loop;
 mod solve1;
+mod solve2;
 mod simplest_unif;
 
 use std::env;

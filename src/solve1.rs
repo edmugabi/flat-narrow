@@ -113,3 +113,26 @@ impl Term {
         unimplemented!()
     }
 }
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn narrow_test() {
+        use Term::*;
+        let eq = |x: &str, y: &str| Term::List(vec![
+            Term::var(x), Term::cnst("="), Term::var(y)
+        ]);
+
+
+        let clauses = &[
+            Clause::new(vec![], eq("x", "x")),
+            Clause::new(vec![ eq("x", "y")], eq("y", "x")),
+            Clause::new(vec![eq("x","y"), eq("y", "z")], eq("x", "z"))
+            
+        ];
+
+    }
+}

@@ -1,0 +1,50 @@
+
+{
+    "clauses": [
+        {
+            "conds": [],
+            "conseqt": "0 : int"
+        },
+        {
+            "conds": [],
+            "conseqt": "1 : int"
+        },
+        {
+            "conds": [],
+            "conseqt": "2 : int"
+        },
+        {
+            "conds": [],
+            "conseqt": "2 > 0"
+        },
+        {
+            "conds": [],
+            "conseqt": "2 - 1 = 1"
+        },
+        {
+            "conds": [],
+            "conseqt": "fact ( 0 ) = 1"
+        },
+        {
+            "conds": [
+                "X : int",
+                "X > 0",
+                "X1 = X - 1",
+                "fact ( X1 ) = Y"
+            ],
+            "conseqt": "fact ( X ) = X * Y"
+        }
+
+    ],
+    "queries": [
+        {
+            "query": ["fact ( 2 ) = X"],
+            "strategy": "DFS",
+            "results": [
+                {
+                    "X" : "2"
+                }
+            ]
+        }
+    ]
+}

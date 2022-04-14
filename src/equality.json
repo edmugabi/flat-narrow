@@ -1,0 +1,45 @@
+{
+    "clauses": [
+        "X \"=\" X = true",
+
+        "( C && true ) = C",
+        "( true && C ) = C",
+        "( C && false ) = false",
+        "( false && C ) = false",
+        "( ! true ) = false",
+        "( ! false ) = true",
+        "! X = ( ! X )",
+        "X && Y && Z = ( X && Y ) && Z",
+        "X && ( Y && Z ) = ( X && Y ) && Z",
+        "X && Y = ( X && Y )"
+    ],
+    "queries": [
+
+        {
+            "query" : "true && false = false",
+            "strategy": "DFS",
+            "results": [{}]
+        },
+        {
+            "query" : "! X",
+            "strategy": "DFS",
+            "results": [
+                { "X": "false" }
+            ]
+        },
+        {
+            "query" : "true && X",
+            "strategy": "DFS",
+            "results": [
+                { "X": "true" }
+            ]
+        },
+        {
+            "query" : "true && ! X && true",
+            "strategy": "DFS",
+            "results": [
+                { "X": "false" }
+            ]
+        }
+    ]
+}
