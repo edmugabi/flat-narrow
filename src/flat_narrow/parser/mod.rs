@@ -6,7 +6,8 @@ use nom::character::complete::{alpha1, multispace0, satisfy};
 use nom::character::complete::{alphanumeric0, alphanumeric1, space0, space1};
 use nom::combinator::{all_consuming, map, recognize, verify, value, opt};
 use nom::multi::{many0, many1, many_m_n, separated_list0, separated_list1};
-use nom::sequence::{delimited, pair, tuple, preceded, separated_pair};
+use nom::sequence::{delimited, pair};
+use nom::sequence::{tuple, preceded, terminated, separated_pair};
 
 use super::term::{Symbol, Term};
 use super::pattern::Patt;
@@ -299,10 +300,13 @@ pub fn pcond_program(input: &str) -> IResult<&str, Vec<Clause>> {
         Goal
     );
     let pgoals = separated_list0(many1(line_sep), pgoal);
-    let p = separated_pair(pgoals, many1(line_sep), 
+
+    let p = pair(
+        opt(terminated(pgoals, many1(line_sep))),
         preceded(pair(tag("=>"), space0), pclause_head)
     );
     let pclause = map(p, |(goals, (lhs, rhs))| {
+        let goals = goals.unwrap_or(vec![]);
         Clause { conds: goals, conseqt: (lhs, rhs)}
     });
 
@@ -364,12 +368,23 @@ mod test_parser {
     fn p1cond_test() {
    
         let FACT = "    X : int\n    X1 = X - 1\n=> true\
-\n    S : char\n=> ty ...Kl yh = true";
+\n    S : char\n=> ty ...Kl yh = true\n=> true";
         use nom::Finish;
         use nom::error::convert_error;
         let result: IResult<_,_> = pcond_program(FACT);
         //.finish()
         //.map_err(|err| println!("{}, ", convert_error(FACT, err)));;
+
+        println!("{:?}", result);
+    }
+    #[test]
+    fn p2cond_test() {
+        let input = "=> true";
+        use nom::Finish;
+        use nom::error::convert_error;
+        let result = pcond_program(input)
+            .finish()
+            .map_err(|err| println!("{}, ", convert_error(input, err)));;
 
         println!("{:?}", result);
     }

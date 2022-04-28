@@ -55,6 +55,8 @@ impl<'a> CPoint<'a> {
 
         root.map(move |env| {
             // only return variables that appear in the original goal
+                print!("Env with internal variables: ");
+                println!("{}", env.pretty_print());
                 let map = env.map.into_iter()
                     .filter(|(key,_)| free.contains(key))
                     .collect();
@@ -66,8 +68,9 @@ impl<'a> CPoint<'a> {
     fn narrow(mut self) -> Soln<'a>
     {
 
-        //debug!("\nTrying cp:\n{}\n\n", self);
-        match self.goals.split_first() {
+        debug!("---------------------------");
+        debug!("\nTrying cp:\n{}\n\n", self);
+        match self.goals.split_first_mut() {
             None => { return Soln::Res(self.env) },
             Some((goal, rest_goals)) => {
 
@@ -76,6 +79,11 @@ impl<'a> CPoint<'a> {
                 for j in 0..goal.0.len() {
                     //let sub_goal = &goal.selected_goal().subst(&self.env);
                     let sub_goal = &goal.0[j].subst(&self.env);
+
+                    if let Some(new_term) = sub_goal.reduce_term() {
+                        goal.0[j] = new_term;
+                        return Soln::CP1(self)
+                    }
 
                     for i in 0..self.clauses.len() {
                         let mut clause = self.clauses[i].clone();
@@ -98,7 +106,7 @@ impl<'a> CPoint<'a> {
                             let mut ret_goals = conds;
                             ret_goals.push(new_goal);
                             ret_goals.extend_from_slice(rest_goals);
-                                /*
+                            
                             debug!("\n\nClause: \n{}\
                                 \nGoal  : {}\
                                 \nredex : {}\
@@ -113,14 +121,14 @@ impl<'a> CPoint<'a> {
                                 ret_env.pretty_print(),
                                 k1, self.depth + 1
                             );
-                            */
+                            
 
-                            // debug!("\nsubgoal: {}\n, clause: {}\n, ret_goals: {}\n\
-                            // ret_env: {}
-                            // ",
-                            //     sub_goal, clause_clone, ret_goals.pretty_print(),
-                            //     ret_env.pretty_print()
-                            // );
+                            debug!("\nsubgoal: {}\n, clause: {}\n, ret_goals: {}\n\
+                            ret_env: {}
+                            ",
+                                sub_goal, clause_clone, ret_goals.pretty_print(),
+                                ret_env.pretty_print()
+                            );
     
                             let cp0 = CPoint {
                                 clauses: self.clauses,
@@ -142,9 +150,12 @@ impl<'a> CPoint<'a> {
                     }
                 }
 
-                debug!("Failed to narrow {}", goal);
+                println!("Failed to narrow {}", goal);
 
-                match goal.0[0].unify(&goal.0[1]) {
+                let goal_lhs = goal.0[0].subst(&self.env);
+                let goal_rhs = goal.0[1].subst(&self.env);
+                
+                match goal_lhs.unify(&goal_rhs) {
                     Ok(new_env) => {
                         let ret_env = new_env.compose(&self.env);
                         self.env = ret_env;
@@ -258,15 +269,58 @@ impl<'b> Iterator for CPointIter<'b> {
     }
 }
 
-const FACTORIAL: &str = "
-    X : int
-    Y : int
-    X1 : int
+const FACTORIAL: &str = 
+"
+=> fact ( 0 ) = 1
+
+    X > 0
     X - 1 = X1
     fact ( X1 ) = Y
 => fact ( X ) = X * Y
-
 ";
+
+fn parse_top(rules: &str, goal_str: &str) -> (Vec<Clause>, Goal) {
+    use nom::Finish;
+    use nom::error::convert_error;
+    use super::parser::{pgoal, pcond_program};
+    let res = pcond_program(rules)
+        .finish()
+        .map_err(|e| convert_error(rules, e));
+
+    let (_, clauses) = res.unwrap();
+
+    let (_, goal) = pgoal(goal_str)
+        .finish().map_err(|e| convert_error(goal_str,e))
+        .unwrap();
+
+    (clauses, Goal(goal))
+}
+
+#[test]
+fn program_tests() {
+    let clauses = "
+=> X && true = X
+=> true && X = X
+=> false && X = false
+=> X && false = false
+=> X || true = true
+=> true || X = true
+=> false || X = X
+=> X || false = X
+=> ! ! X = X
+=> X + ( Y + Z ) = ( X + Y ) + Z
+    ";
+
+    let goal = "X && false = false";
+
+    let (clauses, goal) = parse_top(clauses, goal);
+    let mut cp_iter = CPoint::new(clauses.as_slice(), vec![goal])
+        .solve(Strategy::DFS);
+
+    println!("{:?}", cp_iter.next());
+    println!("{:?}", cp_iter.next());
+
+}
 
 #[test]
 fn pcond_prog_test() {
@@ -277,19 +331,22 @@ fn pcond_prog_test() {
         .finish()
         .map_err(|e| convert_error(FACTORIAL, e));
 
+    //println!("{:?}", res);
     let (_, clauses) = res.unwrap();
     //assert_eq!(rest, "");
-    println!("{}", clauses.as_slice().pretty_print());
+    //println!("{}", clauses.as_slice().pretty_print());
 
-    let GOAL = "fact ( 2 ) = Z";
+    let GOAL = "fact ( 10 ) = Z";
     let (_, goal) = pgoal(GOAL)
         .finish().map_err(|e| convert_error(GOAL,e))
         .unwrap();
 
-    println!("{:?}", goal);
+    //println!("{:?}", goal);
 
     let mut cp = CPoint::new(clauses.as_slice(), vec![Goal(goal)]);
-    println!("{}", cp);
+    //println!("{}", cp);
+
+    // println!("{}", cp.narrow());
 
     // match cp.narrow() {
     //     Soln::CP([mut cp0, cp1]) => {
@@ -298,6 +355,20 @@ fn pcond_prog_test() {
     //     },
     //     _ => {}
     // }
-    println!("{}", cp.narrow());
+    let mut cp_iter = cp.solve(Strategy::DFS);
+    println!("{:?}", cp_iter.next());
+    println!("{:?}", cp_iter.next());
+}
+
+#[test]
+fn factorial_test() {
+    fn fact(n: u64) -> u64 {
+        if n == 0 { 1 }
+        else { n*fact(n-1) }
+    }
+
+    assert_eq!(fact(10), 3628800);
+
+    println!("{}", fact(10));
 }
 

@@ -27,6 +27,7 @@ pub enum Symbol {
     Var(String)
 }
 
+#[macro_export]
 macro_rules! cnst {
     ($c:literal) => {
         $crate::flat_narrow::term::Symbol::Const($c.to_owned())
@@ -118,6 +119,36 @@ impl Term {
     fn subst_symbols(symbols: &mut [Symbol], env: &Env) {
         todo!()
     }
+
+    
+    pub fn reduce_term(&self) -> Option<Term> {
+        use Symbol::*;
+        match self.symbols.as_slice() {
+            [Const(a), Const(op), Const(b)] => {
+                if let (Ok(a), Ok(b)) = (a.parse::<u64>(), b.parse::<u64>()) {
+                    
+                    match op.as_str() {
+                        "*" => {
+                            let c = Const((a*b).to_string());
+                            return Some(Term::from(c))
+                        }
+                        "-" => {
+                            let c = Const((a-b).to_string());
+                            return Some(Term::from(c))
+                        }
+                        ">" => {
+                            let c = Const((a>b).to_string());
+                            return Some(Term::from(c))
+                        }
+                        _ => { None }
+                    }
+                }
+                else { return None }
+            },
+            _ => None
+        }
+    }
+    
         
     pub fn subst_mut<'a>(&mut self, env: &Env) {
         for i in 0..self.symbols.len() {

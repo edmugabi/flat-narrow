@@ -2,9 +2,12 @@ use std::fmt;
 use super::term::Term;
 
 use super::PrettyPrint;
+use super::term::Symbol;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Goal(pub [Term;2]);
+
+
 
 impl fmt::Display for Goal {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

@@ -1,10 +1,10 @@
 
 {
     "clauses": [
-        {
-            "conds": [],
-            "conseqt": "not ( false ) = true"
-        }
+        { "conds": [],  "conseqt": "not ( false ) = true" },
+        { "conds": [],  "conseqt": "true && X = X" },
+        { "conds": [],  "conseqt": "X && true = X" },
+        { "conds": [],  "conseqt": "X && true = X" } 
     ],
     "queries": [
         {
